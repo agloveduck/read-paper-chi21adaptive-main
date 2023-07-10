@@ -56,7 +56,7 @@ pwd = os.chdir(os.path.dirname(__file__)) # 将当前工作目录更改为脚本
 
 # Set up the menu instance
 currentmenu = utility.load_menu("./input/" + args.menu) # load menu items from text file 调用utility.py 里面的函数来导入菜单列表
-# freqdist：item频率列表  total_clicks: 用户点击menu里item的总数 history:[item名字,在menu里的下标]
+# freqdist：item频率列表  total_clicks: 用户点击menu里item的总数 history:点击历史记录列表 元素为[item名字,在menu里的下标]
 freqdist, total_clicks, history = utility.load_click_distribution(currentmenu, "./input/" + args.history) # load from user history (CSV file)
 associations = utility.load_associations(currentmenu,"./input/" + args.associations) # load assocation matrix from text file
 
@@ -91,8 +91,9 @@ elif strategy == UserStrategy.RECALL:
     weights = [0.0, 0.0, 1.0]
 
 # Intialise the root state using the input menu, associations, and user history
-menu_state = MenuState(currentmenu, associations)
-user_state = UserState(freqdist, total_clicks, history)
+menu_state = MenuState(currentmenu, associations)  # 菜单状态由当前菜单列表以及菜单item关联列表构成
+user_state = UserState(freqdist, total_clicks, history)  # 用户状态由 freqdist：用户点击菜单item频率列表 total_clicks: 用户点击menu里item的总数 history:点击历史记录列表 元素为[item名字,在menu里的下标]
+
 root_state = State(menu_state,user_state, exposed=True)
 my_oracle = UserOracle(maxdepth, associations=menu_state.associations)
 completion_times = my_oracle.get_individual_rewards(root_state)[1] # Initial completion time for current menu

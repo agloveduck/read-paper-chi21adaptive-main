@@ -9,7 +9,7 @@ from scipy import spatial
 import math
 
 # reads a log file and returns a frequency distribution as a dict 从指定的CSV文件中读取用户的历史点击数据，输出三个
-def load_click_distribution (menu, filename, normalize = True):
+def load_click_distribution (menu, filename, normalize = True): # 从文件中加载点击历史记录
     history = []
     with open(filename) as csv_file:
         csv_reader = csv.reader(csv_file)
@@ -18,7 +18,7 @@ def load_click_distribution (menu, filename, normalize = True):
     return get_click_distribution(menu, history, normalize)
     
 
-def get_click_distribution(menu, history, normalize = True):
+def get_click_distribution(menu, history, normalize = True):  # 获取点击分布 返回值三个 item点击频率 总点击数 点击历史记录
     frequency = {}  # 空字典frequency，用于存储每个菜单项的点击频率
     separator = "----"
     for command in menu:

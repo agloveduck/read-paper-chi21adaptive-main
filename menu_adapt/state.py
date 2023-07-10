@@ -69,10 +69,10 @@ class MenuState():  # 定义菜单状态
         return str(self.simplified_menu())
     
     # Returns list of all adaptations that are feasible from the menu state.
-    def possible_adaptations(self):
+    def possible_adaptations(self): # 返回此菜单状态下可能的调整的列表 考虑的adapt包括 swaps / moves / Swap groups / Move groups / do nothing
         
         possibleadaptations = []
-        seen_menus = [self.simplified_menu()]  #  去除多余分隔符的菜单
+        seen_menus = [self.simplified_menu()]  # 去除多余分隔符的菜单 seen_menus 可以起到记录已经访问的菜单的作用，并用于避免不必要的重复计算和评估
         max_distance = 3
 
         simple_menu = list(filter(("----").__ne__, self.menu)) # menu without separators # 没有分隔符的菜单
@@ -84,31 +84,31 @@ class MenuState():  # 定义菜单状态
                 if len(simple_menu)>10:
                     if abs(i-j)>max_distance and self.menu[i] is not self.separator:  # 检查是否超过了允许的最大交换距离
                         continue # Limit max swap distance
-                test_adaptation = Adaptation([i,j,AdaptationType.SWAP, True]) # adapt类型是swap 向用户公布调整
-                adapted_menu = MenuState(self.adapt_menu(test_adaptation), self.associations)   #根据adapt类型调整后的菜单
-                if (adapted_menu.simplified_menu() not in seen_menus):
-                    seen_menus.append(adapted_menu.simplified_menu())
-                    possibleadaptations.append(Adaptation([i,j,AdaptationType.SWAP, True]))
+                test_adaptation = Adaptation([i,j,AdaptationType.SWAP, True])  # adapt类型是swap 向用户公布调整
+                adapted_menu = MenuState(self.adapt_menu(test_adaptation), self.associations)   # 根据adapt类型调整后的菜单
+                if (adapted_menu.simplified_menu() not in seen_menus): # 简化adapt后的menu 并检查是否在记录过往菜单的seen_menus列表里 该适应性生成了一个不同于之前出现过的菜单
+                    seen_menus.append(adapted_menu.simplified_menu())  # 将adapt后的菜单加入已调整菜单列表
+                    possibleadaptations.append(Adaptation([i,j,AdaptationType.SWAP, True])) # 在可能的调整列表中加入 交换菜单中索引为 i 和 j 的菜单项，并设置这个adapt 用户可见或者不可见
                     possibleadaptations.append(Adaptation([i,j,AdaptationType.SWAP, False]))
 
         # moves
         for i in range (0, len(self.menu)):
             for j in range (0, len(self.menu)):
-                if i == j or (i == j+1): continue
+                if i == j or (i == j+1): continue  # 避免移动菜单项到相同的位置或相邻的位置，因为这样的移动没有意义
                 if len(simple_menu) > 10:
-                    if self.menu[i] != self.separator and abs(j-i) > max_distance: 
+                    if self.menu[i] != self.separator and abs(j-i) > max_distance:  # 限制大型菜单中移动菜单项的最大距离
                         continue # Limit max move distance for large menus
                 if self.menu[i] == self.separator:
-                    if j != len(self.menu)-1 and (self.menu[j] == self.separator or self.menu[j-1] == self.separator):
+                    if j != len(self.menu)-1 and (self.menu[j] == self.separator or self.menu[j-1] == self.separator):  # 避免将分隔符移动到其他位置或将菜单项移动到分隔符之前的位置
                         continue   
-                test_adaptation = Adaptation([i,j,AdaptationType.MOVE, True])
+                test_adaptation = Adaptation([i,j,AdaptationType.MOVE, True])  #  adapt类型是move 向用户公布调整
                 adapted_menu = MenuState(self.adapt_menu(test_adaptation), self.associations)
                 if (adapted_menu.simplified_menu() not in seen_menus):
                     seen_menus.append(adapted_menu.simplified_menu())                     
-                    possibleadaptations.append(Adaptation([i,j,AdaptationType.MOVE, True]))
+                    possibleadaptations.append(Adaptation([i,j,AdaptationType.MOVE, True])) # 在可能的调整列表中加入 移动菜单中索引为i的菜单项到位置j，并设置这个adapt 用户可见或者不可见
                     possibleadaptations.append(Adaptation([i,j,AdaptationType.MOVE, False]))
                 
-        # group adaptations
+        # group adaptations 使用分隔符对字符串进行分割，将其拆分为一个包含各个分组的列表 groups [[],[]...]
         menu_string = ";".join(self.menu)
         groups = menu_string.split(self.separator)
         groups = list(filter((";").__ne__, groups))
@@ -116,26 +116,26 @@ class MenuState():  # 定义菜单状态
         # Swap groups
         for i in range (0, len(groups)):
             for j in range (i+1, len(groups)):
-                test_adaptation = Adaptation([i,j,AdaptationType.GROUP_SWAP, True])
+                test_adaptation = Adaptation([i,j,AdaptationType.GROUP_SWAP, True])  #  adapt类型是swap groups 向用户公布调整
                 adapted_menu = MenuState(self.adapt_menu(test_adaptation), self.associations)
                 if (adapted_menu.simplified_menu() not in seen_menus):
                     seen_menus.append(adapted_menu.simplified_menu())
-                    possibleadaptations.append(Adaptation([i,j,AdaptationType.GROUP_SWAP, True]))
+                    possibleadaptations.append(Adaptation([i,j,AdaptationType.GROUP_SWAP, True])) # 在可能的调整列表中加入 交换菜单中索引为i，j的分组，并设置这个adapt 用户可见或者不可见
                     possibleadaptations.append(Adaptation([i,j,AdaptationType.GROUP_SWAP, False]))
         # Move groups
         for i in range (0, len(groups)):
             for j in range (0, len(groups)):
-                if i == j or (i == j+1): continue
+                if i == j or (i == j+1): continue  # 避免移动相同或相邻的位置分组
                 test_adaptation = Adaptation([i,j,AdaptationType.GROUP_MOVE, True])
                 adapted_menu = MenuState(self.adapt_menu(test_adaptation), self.associations)
                 if (adapted_menu.simplified_menu() not in seen_menus):
                     seen_menus.append(adapted_menu.simplified_menu())
-                    possibleadaptations.append(Adaptation([i,j,AdaptationType.GROUP_MOVE, True]))
+                    possibleadaptations.append(Adaptation([i,j,AdaptationType.GROUP_MOVE, True])) # 在可能的调整列表中加入 移动菜单中索引为i的分组到位置j，并设置这个adapt 用户可见或者不可见
                     possibleadaptations.append(Adaptation([i,j,AdaptationType.GROUP_MOVE, False]))
         
         # do nothing, show menu
-        possibleadaptations.append(Adaptation([0,0,AdaptationType.NONE,True]))
-        return possibleadaptations
+        possibleadaptations.append(Adaptation([0,0,AdaptationType.NONE,True]))  # 在可能的调整列表加入 什么都不做的情况
+        return possibleadaptations  # 返回的列表元素格式为Adaptation([i, j, type, expose])
 
     # Function to modify the menu by making an adaptation.
     def adapt_menu(self, adaptation):  # 根据adpat类型调整菜单
@@ -189,15 +189,15 @@ class MenuState():  # 定义菜单状态
         return simplified_menu
             
 # Defines the user's interest and expertise
-class UserState():
-    def __init__(self, freqdist, total_clicks, history):
-        self.freqdist = freqdist # Normalised click frequency distribution (position-independent)
-        self.total_clicks = total_clicks
-        self.history = history
-        item_history = [row[0] for row in self.history]
+class UserState():  # 定义用户状态类
+    def __init__(self, freqdist, total_clicks, history):  # 初始化
+        self.freqdist = freqdist  # Normalised click frequency distribution (position-independent) 字典，freqdist 表示每个菜单项的点击频率
+        self.total_clicks = total_clicks  # 总点击次数
+        self.history = history  # 点击历史记录，是一个列表，记录了用户点击的菜单项及其位置
+        item_history = [row[0] for row in self.history]  # 从历史记录里提取出用户点击的菜单项列表 可能有重复项
 
-        self.recall_practice = {} # Count of clicks at last-seen position (resets when position changes)
-        self.activations = self.get_activations()
+        self.recall_practice = {}  # Count of clicks at last-seen position (resets when position changes) 每个菜单项在最后一次出现位置的点击次数字典
+        self.activations = self.get_activations()  # 每个菜单项的激活值
         for key,_ in self.freqdist.items():
             self.recall_practice[key] = item_history.count(key)
         if int(total_clicks) != len(self.history): print("HMM something wrong with the history")
@@ -207,21 +207,36 @@ class UserState():
 
 
     # For each item, returns a dictionary of activations.
-    def get_activations(self):
-        activations = {} # Activation per target per location
-        duration_between_clicks = 20.0 # Wait time between two clicks
-        session_interval = 50.0 # Wait time between 2 sessions
-        session_click_length = 20 # Clicks per session
-        total_sessions = math.ceil(self.total_clicks/session_click_length) # Number of sessions so far
+    def get_activations(self): # 激活值是根据用户的点击历史和时间间隔计算得出的
+        activations = {} # Activation per target per location 存储每个菜单项在每个位置的激活值
+        duration_between_clicks = 20.0 # Wait time between two clicks 两次点击之间的等待时间
+        session_interval = 50.0 # Wait time between 2 sessions 两个会话之间的等待时间
+        session_click_length = 20 # Clicks per session 每个会话中的点击次数
+        total_sessions = math.ceil(self.total_clicks/session_click_length) # Number of sessions so far 当前总共的会话数
         for i in range(0, int(self.total_clicks)):
             session = math.ceil((i+1)/session_click_length) # Session index
-            item = self.history[i][0]
-            position = self.history[i][1]
-            if item not in activations.keys(): activations[item] = {position:0} # Item has not been seen yet. Add to dictionary
+            item = self.history[i][0]  # 当前点击的菜单项
+            position = self.history[i][1]  # 当前点击的菜单项所处位置
+            if item not in activations.keys(): activations[item] = {position:0} # Item has not been seen yet. Add to dictionary 初始化其对应位置的激活值为0
             if position not in activations[item].keys(): activations[item][position] = 0 # Item not seen at this position yet. Add to item's dictionary
+            # 在计算激活值时，越早点击的菜单项具有更高的激活值
+            # 点击时间与当前时间之间的时间差 = 两次点击之间的等待时间 * 剩余点击次数 + 剩余会话次数 * 会话间等待时间
             time_difference = duration_between_clicks*(self.total_clicks - i) + (total_sessions - session)*session_interval # Difference between time now and time of click
-            activations[item][position] += pow(time_difference, -0.5)
-        return activations
+            activations[item][position] += pow(time_difference, -0.5)  # 时间差的倒数的平方作为激活值的增量
+        return activations  # 嵌套字典 例子如下
+    # {
+#     item1: {
+#         position1: activation_value1,
+#         position2: activation_value2,
+#         ...
+#     },
+#     item2: {
+#         position1: activation_value3,
+#         position2: activation_value4,
+#         ...
+#     },
+#     ...
+# }
 
 
 
