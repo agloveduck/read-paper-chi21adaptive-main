@@ -220,7 +220,7 @@ def get_assoc_and_freq_list(state):
             freq_list.append(frequency[menu[k]])
     return assoc_list, freq_list
 
-def get_header_indexes(menu):
+def get_header_indexes(menu): # 返回菜单中所有组标题（header）的索引列表
         header_indexes = []
         separator = "----"
         groupboundary = False

@@ -94,11 +94,11 @@ elif strategy == UserStrategy.RECALL:
 menu_state = MenuState(currentmenu, associations)  # 菜单状态由当前菜单列表以及菜单item关联列表构成
 user_state = UserState(freqdist, total_clicks, history)  # 用户状态由 freqdist：用户点击菜单item频率列表 total_clicks: 用户点击menu里item的总数 history:点击历史记录列表 元素为[item名字,在menu里的下标]
 
-root_state = State(menu_state,user_state, exposed=True)
-my_oracle = UserOracle(maxdepth, associations=menu_state.associations)
-completion_times = my_oracle.get_individual_rewards(root_state)[1] # Initial completion time for current menu
-avg_time = sum([a * b for a, b in zip(weights, completion_times)])
-parallelised = False if args.nopp else True
+root_state = State(menu_state,user_state, exposed=True) # 初始化状态根节点
+my_oracle = UserOracle(maxdepth, associations=menu_state.associations)  #用户运行模型 由最大深度 菜单关联列表 决定
+completion_times = my_oracle.get_individual_rewards(root_state)[1] # Initial completion time for current menu 三种策略搜索时间列表
+avg_time = sum([a * b for a, b in zip(weights, completion_times)]) # 计算加权平均搜索时间（三种策略都考虑）
+parallelised = False if args.nopp else True  # 是否并行
 
 
 # Start the planner

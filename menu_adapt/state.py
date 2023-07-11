@@ -22,7 +22,7 @@ class AdaptationType(Enum):
 
 class State():
     separator = "----"
-    number_of_clicks = 20
+    number_of_clicks = 20  # ？
     # Initialise the state
     def __init__(self, menu_state, user_state, previous_seen_state = None, depth = 0, exposed = False):
         self.user_state = user_state
@@ -32,9 +32,9 @@ class State():
         self.exposed = exposed
 
     # Function called when an adaptation is made. The user state and menu state are updated accordingly
-    def take_adaptation(self, adaptation, update_user = True):        
+    def take_adaptation(self, adaptation, update_user = True):        # 做调整
         new_state = deepcopy(self)
-        new_state.depth += 1
+        new_state.depth += 1  # 深度+1
         new_state.exposed = adaptation.expose
         if self.exposed: new_state.previous_seen_state = self
 
@@ -241,24 +241,24 @@ class UserState():  # 定义用户状态类
 
 
     # Method to update user state when the time-step is incremented (after taking an adaptation)
-    def update(self, menu, number_of_clicks = None):
+    def update(self, menu, number_of_clicks = None):  # 更新用户状态的方法
         # num_clicks = len(self.history)
         #  if len(self.history) < number_of_clicks else number_of_clicks
         # First we add new clicks
-        clicks_to_add = self.simple_history()[-number_of_clicks:]
+        clicks_to_add = self.simple_history()[-number_of_clicks:]  # 新添的用户点击列表
         
         item_list = list(filter(("----").__ne__, menu)) # new menu without separator
-        for click in clicks_to_add:
+        for click in clicks_to_add:  # 将每个要添加的点击记录（点击项和位置）添加到 history 列表
             self.history.append([click, item_list.index(click)])
 
         # Next we update user expertise
-        self.update_freqdist(menu)
-        self.activations = self.get_activations()
+        self.update_freqdist(menu)     # 更新用户点击频率字典
+        self.activations = self.get_activations()  # 更新各item 激活值
 
     # Update frequency distribution based on new history    
-    def update_freqdist(self, menu, normalize = True):
+    def update_freqdist(self, menu, normalize = True):  #更新用户点击频率分布信息
         self.freqdist = {}
-        for command in menu:
+        for command in menu: # 初始化
             if command != "----":
                 self.freqdist[command] = 0
         
@@ -269,14 +269,14 @@ class UserState():  # 定义用户状态类
             else:
                 self.freqdist[item] += 1.
 
-        self.total_clicks = sum(list(self.freqdist.values()))
+        self.total_clicks = sum(list(self.freqdist.values()))  # 更新总点击数
 
         if normalize: 
             for command in list(self.freqdist.keys()):
-                self.freqdist[command] = round(self.freqdist[command]/self.total_clicks, 3)
+                self.freqdist[command] = round(self.freqdist[command]/self.total_clicks, 3)  # 归一化
 
     # click history without timestamp
-    def simple_history(self):
+    def simple_history(self):  # 点击记录中的第一个元素（菜单项）提取出来，然后返回这些菜单项组成的列表 [potato,tomato,potato...]
         return [row[0] for row in self.history]
 
     def __str__(self):
