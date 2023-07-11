@@ -40,7 +40,7 @@ def get_click_distribution(menu, history, normalize = True):  # 获取点击分�
     return frequency, total_clicks, indexed_history  # 返回 item点击频率 总点击数 点击历史记录
 
 # returns frequency distribution given a menu and history
-def get_frequencies(menu, history, normalize = True):
+def get_frequencies(menu, history, normalize = True):  # 获取菜单item的字典
     frequency = {}
     total_clicks = len(history)
     menu_items = list(filter(("----").__ne__, menu))
@@ -64,16 +64,16 @@ class KeyedVectors:
     pass
 
 
-def compute_associations(menu, ft=None):
-    # Load pre-trained FT model from wiki corpus
+def compute_associations(menu, ft=None):  # 计算菜单项之间的关联度 词向量
+    # Load pre-trained FT model from wiki corpus 加载预训练的 Word2Vec 模型 model，该模型用于计算词向量相似度
     # ft = fasttext.load_model('../fastText/models/cc.en.300.bin')
     # fasttext.util.reduce_model(ft, 100) 
     # Load pre-trained word2vec models. SO_vectors_200 = software engineering domain
     # model = KeyedVectors.load_word2vec_format('../fastText/models/SO_vectors_200.bin', binary=True)
     model = KeyedVectors.load_word2vec_format('../fastText/models/GoogleNews-vectors-negative300.bin', binary=True)  
     separator = "----"
-    associations = {}
-    associations_w2v = {}
+    associations = {}  #关联字典
+    associations_w2v = {}  # 基于 Word2Vec 的关联字典
     for command in menu:
         if command != separator:
             associations[command] = {command:1.0}
@@ -94,7 +94,7 @@ def compute_associations(menu, ft=None):
             print(i + "," + j + ": ft = " + str(round(score,3)) + " w2v = " + str(round(score_word2vec,3)) )
             associations[i][j] = score
             associations_w2v[i][j] = score_word2vec
-        
+        # 提前加载 FastText 模型 ft 或通过注释掉的代码进行预训练模型的加载和降维
     
     # print (associations)
     return associations
@@ -105,7 +105,7 @@ def compute_associations(menu, ft=None):
     # >>> 1 - spatial.distance.cosine(vector1,vector2)
     # >>> 1 - spatial.distance.cosine(ft.get_word_vector('asparagus'),ft.get_word_vector('aubergine'))
 
-def load_activations (history):
+def load_activations (history): # 激活值是根据用户的点击历史和时间间隔计算得出的 跟state.py里的一样 返回值是嵌套字典
     total_clicks = len(history)
     activations = {} # Activation per target per location
     duration_between_clicks = 20.0 # Wait time between two clicks
@@ -149,7 +149,7 @@ def load_associations (menu, filename): #关联字典 key是item名字 value是�
     #         associations[row[0]]= row[1:]
     return associations
 
-def save_menu (menu, filename):
+def save_menu (menu, filename): # 保存menu到文件中
     f = open(filename, "w")
     for command in menu:
         f.write(command + "\n")
@@ -165,7 +165,7 @@ def load_menu (filename): # 导入 menu里的item
     return menu
 
 # Returns association matrix for a menu using the associations dictionary
-def get_association_matrix(menu, associations):
+def get_association_matrix(menu, associations): # 根据菜单和关联字典生成关联矩阵
     association_matrix = []
     for k in range (0, len(menu)):
         if menu[k] in associations:
@@ -180,7 +180,7 @@ def get_association_matrix(menu, associations):
     return association_matrix
 
 # Returns sorted frequencies list for a menu using the frequency dictionary
-def get_sorted_frequencies(menu,frequency):
+def get_sorted_frequencies(menu,frequency):  # 将点击频率排序
     separator = "----"
     sorted_frequencies = []
     for k in range (0, len(menu)):

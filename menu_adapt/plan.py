@@ -103,6 +103,7 @@ parallelised = False if args.nopp else True  # 是否并行
 
 # Start the planner
 ray.init()  # ray.init()来初始化Ray库，启动了一个计算节点
+# 打印原始菜单、平均选择时间、用户兴趣（归一化的点击频率分布）和关联性信息
 print(f"Planning started. Strategy: {strategy}. Parallelisation: {parallelised}. Neural Network: {use_network}.")
 print(f"Original menu: {menu_state.simplified_menu()}. Average selection time: {round(avg_time,2)} seconds")
 print(f"User Interest (normalised): {freqdist}")
@@ -110,9 +111,9 @@ print(f"Associations: {associations}")
 
 # Execute the MCTS planner and return sequence of adaptations
 @ray.remote
-def step(state, oracle, weights, objective, use_network, network_name, timebudget):
+def step(state, oracle, weights, objective, use_network, network_name, timebudget): # 执行一步，并保存了步骤的结果
     results = []
-    original_times = oracle.get_individual_rewards(state)[1]
+    original_times = oracle.get_individual_rewards(state)[1] #获取这一步 使用各策略搜索时间列表 [new_serial_time, new_forage_time, new_recall_time]
     tree = mcts.mcts(oracle, weights, objective, use_network, network_name, time_limit=timebudget)
     node = None
     while not oracle.is_terminal(state):

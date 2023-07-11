@@ -21,7 +21,7 @@ parser.add_argument("--maxdepth", "-d", type=int, help="maximum depth", default=
 parser.add_argument("--pumptype", "-p", help="Pump Type (PN/VN)", choices=["PN","VN"], default="VN")
 args = parser.parse_args()
 
-def simplify_menu(menu):
+def simplify_menu(menu): # 函数用于简化菜单，去除重复的分隔符，并确保菜单以分隔符开头和结尾
     separator = "----"
     simplified_menu = []
     for i in range (0,len(menu)):
@@ -59,7 +59,7 @@ def policy_pump(state,oracle,time_budget):
     return probabilities
     
 # Returns association matrix for a menu using the associations dictionary
-def get_association_matrix(menu, associations):
+def get_association_matrix(menu, associations): # 根据关联字典生成菜单的关联矩阵
     association_matrix = []
     for k in range (0, len(menu)):
         if menu[k] in associations:
@@ -74,7 +74,7 @@ def get_association_matrix(menu, associations):
     return association_matrix
 
 # Returns sorted frequencies list for a menu using the frequency dictionary
-def get_sorted_frequencies(menu,frequency):
+def get_sorted_frequencies(menu,frequency): # 根据频率字典生成菜单的排序频率列表
     separator = "----"
     sorted_frequencies = []
     for k in range (0, len(menu)):
@@ -84,14 +84,14 @@ def get_sorted_frequencies(menu,frequency):
             sorted_frequencies.append(frequency[menu[k]])
     return sorted_frequencies
 
-def generate_history(menu):
+def generate_history(menu): #生成随机的历史记录 生成符合Zipf分布的随机数
     menu_items = list(filter(("----").__ne__, menu))
     probabilities = []
     while(1):
         probabilities = []
-        shape = 1.5 # For zipf distribution
+        shape = 1.5 # For zipf distribution shape是Zipf分布的形状参数，控制分布的偏斜程度。较大的shape值会使分布更加偏斜，而较小的shape值会使分布更加平坦
         size = len(menu_items)
-        zipf_dist = np.random.zipf(shape,size)
+        zipf_dist = np.random.zipf(shape,size) # 齐夫定律
         probabilities = [i/sum(zipf_dist) for i in zipf_dist]
         if max(probabilities) < 0.8: break
     clicks = random.choices(menu_items,probabilities,k=40)
@@ -120,27 +120,27 @@ print(currentmenu)
 
 
 
-training_data = set([])
-timestamp = time.strftime("%H%M%S")
+training_data = set([])  # 创建一个空集合 存储训练数据
+timestamp = time.strftime("%H%M%S")  #获取当前时间的时间戳
 for i in range (0, number_of_unique_menus):
-    print("Unique menu #: ",i+1)
-    my_menu_state = MenuState(currentmenu,associations)
-    random.shuffle(my_menu_state.menu)
-    randomizedmenu = my_menu_state.menu
-    print(randomizedmenu)
+    print("Unique menu #: ",i+1)  # 调整到第几个菜单了
+    my_menu_state = MenuState(currentmenu,associations)  # 初始化菜单状态
+    random.shuffle(my_menu_state.menu)   # 对菜单进行随机打乱
+    randomizedmenu = my_menu_state.menu  # 打乱后的菜单赋值给变量randomizedmenu
+    print(randomizedmenu)  # 打印弄乱的菜单
     for j in range (0, number_of_users):
         history = generate_history(randomizedmenu)
         frequency,total_clicks = utility.get_frequencies(randomizedmenu, history)
-        my_user_state = UserState(frequency, total_clicks,history)
-        is_exposed = bool(random.getrandbits(1))
-        my_state = State(my_menu_state, my_user_state, exposed=is_exposed)
-        my_oracle = useroracle.UserOracle(maxdepth,associations=my_state.menu_state.associations)
+        my_user_state = UserState(frequency, total_clicks,history)   # 使用频率、总点击数和随机历史记录初始化用户状态
+        is_exposed = bool(random.getrandbits(1))  # 随机决定是否暴露给用户
+        my_state = State(my_menu_state, my_user_state, exposed=is_exposed)  # 初始化状态
+        my_oracle = useroracle.UserOracle(maxdepth,associations=my_state.menu_state.associations) # 模拟用户操作
         old_menu = simplify_menu(randomizedmenu)
-        frequency_old_menu = get_sorted_frequencies(old_menu,frequency)
-        associations_old_menu = get_association_matrix(old_menu,associations)
+        frequency_old_menu = get_sorted_frequencies(old_menu,frequency)  # old_menu的频率排序列表
+        associations_old_menu = get_association_matrix(old_menu,associations)  # old_menu的关联矩阵
         
-        for k in range (0, number_of_adaptations):
-            if args.pumptype == "VN":
+        for k in range (0, number_of_adaptations): # 生成训练数据，并将结果存储到文件中。
+            if args.pumptype == "VN":   # 根据value network 策略 来进行菜单调整
                 vn_results = pump(my_state, my_oracle, time_budget)
                 if vn_results:
                     rewards = [round(i,5) for i in vn_results[0]]
@@ -153,7 +153,7 @@ for i in range (0, number_of_unique_menus):
                     training_data.add(observation)
                     with open('output/results_vn_' + timestamp + '.txt', 'a') as filehandle:
                         filehandle.write('%s\n'% observation)
-            elif args.pumptype == "PN":
+            elif args.pumptype == "PN":  # 根据policy network 策略 来进行菜单调整
                 pn_results = policy_pump(my_state, my_oracle, time_budget)
                 printable_results = {}
                 if pn_results:
