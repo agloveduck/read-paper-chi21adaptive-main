@@ -180,7 +180,7 @@ def get_association_matrix(menu, associations): # 根据菜单和关联字典生
     return association_matrix
 
 # Returns sorted frequencies list for a menu using the frequency dictionary
-def get_sorted_frequencies(menu,frequency):  # 将点击频率排序
+def get_sorted_frequencies(menu,frequency):  # 返回点击频率列表
     separator = "----"
     sorted_frequencies = []
     for k in range (0, len(menu)):
@@ -212,7 +212,7 @@ def get_assoc_and_freq_list(state):
         else:
             for l in range (0, len(menu)):
                 assoc_list.append(0.0)
-    
+
     for k in range(0, len(menu)):
         if menu[k] == separator:
             freq_list.append(0.0)

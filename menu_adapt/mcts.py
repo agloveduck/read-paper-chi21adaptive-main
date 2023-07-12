@@ -17,18 +17,18 @@ from value_network_model import ValueNetwork
 
 
 # Rollout policy: random
-def random_policy(state, oracle):
+def random_policy(state, oracle):  # 使用HCI预测模型计算奖励 [reward_serial, reward_forage, reward_recall] 当use_network 为false时
     rewards = [0.0,0.0,0.0]
     # if state.exposed: rewards = oracle.get_individual_rewards(state)[0]
     while not oracle.is_terminal(state):
         try:
-            adaptation = random.choice(state.menu_state.possible_adaptations())
+            adaptation = random.choice(state.menu_state.possible_adaptations())  # 从可能的adaptations中随便挑选一个
         except IndexError:
             raise Exception("Non-terminal state has no possible adaptations: " + str(state))
-        state = state.take_adaptation(adaptation)
+        state = state.take_adaptation(adaptation)  # 做一个调整 产生新的state
         if state.exposed:
-            new_rewards = oracle.get_individual_rewards(state)[0]
-            rewards = [a + b for a,b in zip(rewards, new_rewards)]                
+            new_rewards = oracle.get_individual_rewards(state)[0]  # 返回三种搜索策略的奖励[reward_serial, reward_forage, reward_recall]
+            rewards = [a + b for a,b in zip(rewards, new_rewards)]   # 计算累计奖励
     return rewards
 
 # MCTS node
@@ -62,19 +62,19 @@ class mcts():
             self.vn = ValueNetwork("networks/"+network_name)
 
         
-    def __str__(self):   # 返回mcts树结构的字符串表示形式。它从根节点开始，递归遍历其所有子节点，将它们的字符串表示形式添加到输出中
+    def __str__(self):  #  返回mcts树结构的字符串表示形式。它从根节点开始，递归遍历其所有子节点，将它们的字符串表示形式添加到输出中
         tree_str = str(self.root) + "\n"
         for child in self.root.children.values():
             tree_str += str(child) + "\n"
         return tree_str
     
-    def execute_round(self):
-        node = self.select_node(self.root)        
-        if node is not self.root and self.use_network:
+    def execute_round(self):  # 执行一轮MCTS
+        node = self.select_node(self.root)    # 选择一个要扩展的节点
+        if node is not self.root and self.use_network:  # 节点不是根节点且使用价值网络来计算累计奖励
             rewards = self.get_reward_predictions(node)
         else: 
-            rewards = self.rollout(node.state, self.oracle)
-        self.backpropagate(node, rewards)
+            rewards = self.rollout(node.state, self.oracle)  # 使用HCI预测模型计算累计奖励
+        self.backpropagate(node, rewards)  # 反向传播更新访问次数和奖励
 
     def search(self, initial_state, initial_node = None):
         if initial_node: 
@@ -97,18 +97,18 @@ class mcts():
         return best_adaptation, best_child, avg_rewards, adaptation_probability
 
 
-    def get_reward_predictions(self, node):
+    def get_reward_predictions(self, node):  # 使用价值网络来计算累计奖励
         rewards = [0.0,0.0,0.0]
-        if node.parent is not None:
+        if node.parent is not None:  # 父节点不为空 为空就是到根节点了 结束
             samples = []
-            target_menu = node.state.menu_state.simplified_menu(trailing_separators=True)
-            source_menu = node.parent.state.menu_state.simplified_menu(trailing_separators=True)
+            target_menu = node.state.menu_state.simplified_menu(trailing_separators=True)  # 目标菜单
+            source_menu = node.parent.state.menu_state.simplified_menu(trailing_separators=True)  # 原来的菜单
             target_state = node.state
             source_state = node.parent.state
-            source_assoc = utility.get_association_matrix(source_menu, source_state.menu_state.associations)
-            source_freq = utility.get_sorted_frequencies(source_menu, source_state.user_state.freqdist)
-            target_assoc = utility.get_association_matrix(target_menu, target_state.menu_state.associations)
-            target_freq = utility.get_sorted_frequencies(target_menu, target_state.user_state.freqdist)
+            source_assoc = utility.get_association_matrix(source_menu, source_state.menu_state.associations)  # 原来的关联矩阵
+            source_freq = utility.get_sorted_frequencies(source_menu, source_state.user_state.freqdist)  # 原来菜单点击频率列表
+            target_assoc = utility.get_association_matrix(target_menu, target_state.menu_state.associations)  # 目标的关联矩阵
+            target_freq = utility.get_sorted_frequencies(target_menu, target_state.user_state.freqdist)  # 目标菜单点击频率列表
             exposed = node.state.exposed
             samples.append([source_menu,source_freq,source_assoc,target_menu,target_freq,target_assoc,[bool(exposed)]])
             predictions = self.vn.predict_batch([samples[0]]) # Get predictions from value network (if usenetwork is true)
@@ -144,7 +144,7 @@ class mcts():
                 return newNode
         raise Exception("Ouch! Should never reach here")
 
-    def backpropagate(self, node, rewards):
+    def backpropagate(self, node, rewards):  # 反向传播到根节点 更新节点访问次数、累计奖励
         while node is not None:
             node.num_visits += 1
             node.total_rewards = [a+b for a,b in zip(node.total_rewards,rewards)]
