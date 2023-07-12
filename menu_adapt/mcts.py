@@ -119,7 +119,7 @@ class mcts():
     def select_node(self, node):  # 根据UCT算法选择树中的节点 选择未被探索的
         # 子节点
         while not self.oracle.is_terminal(node.state):  # 判断是否到达最大深度
-            if node.fully_expanded:  # 如果一个节点完全展开，意味着它的所有子节点都已被探索，它会选择UCT分数最高的子节点接着探索
+            if node.fully_expanded:  # 如果一个节点完全展开，意味着它的所有子节点都已被探索，它会选择UCT分数最高的子节点作为新节点
                 node = self.get_best_child(node, self.exploration_const)
             else:  # 该节点未完全扩展
                 return self.expand(node)  # 扩展这个节点
@@ -151,7 +151,7 @@ class mcts():
             node = node.parent
 
     # Pick best child as next state
-    def get_best_child(self, node, exploration_const):  # 从给定的父节点中选择最佳子节点
+    def get_best_child(self, node, exploration_const):  # 使用UCT算法从给定的父节点中选择最佳子节点
         best_value = float("-inf")
         best_node = None
         # return argmax(customFunction(node, frequencies, associations))
@@ -159,16 +159,17 @@ class mcts():
         random.shuffle(children)
         for child in children:
             # node value using UCT
-            total_reward = self.compute_reward(child.total_rewards)
+            total_reward = self.compute_reward(child.total_rewards)  # 计算子节点总奖励
+            # 根据UCT公式计算节点UCT值
             node_value = total_reward/child.num_visits + exploration_const * math.sqrt(math.log(node.num_visits) / child.num_visits)
             
             if node_value > best_value:
                 best_value = node_value
                 best_node = child
 
-        return best_node
+        return best_node  # 返回UCT值最大的节点
 
-    def compute_reward(self,total_rewards):
+    def compute_reward(self,total_rewards):  # 三种计算奖励的方法（如何考虑三种搜索策略带来的奖励）
         if self.objective == "AVERAGE":
             total_reward = sum([a*b for a,b in zip(self.weights, total_rewards)]) # Take average reward 
         elif self.objective == "OPTIMISTIC":
@@ -178,12 +179,12 @@ class mcts():
         return total_reward
 
 
-    def get_adaptation(self, root, best_child):
+    def get_adaptation(self, root, best_child):  # 从根节点出发 根据其children字典，找最佳子节点 返回具体的adaptation
         for adaptation, node in root.children.items():
             if node is best_child:
                 return adaptation
                 
-    def get_adaptation_probabilities(self, node, exploration_const):
+    def get_adaptation_probabilities(self, node, exploration_const):  # 根据子节点的访问计数计算从给定节点选择每种可能的适应的概率
         if node.children == 0: return None
         # Transition probability for children. Dict. Key = adaptation; Value = probability
         probability = {a:0.0 for a in node.state.menu_state.possible_adaptations()}
@@ -192,7 +193,7 @@ class mcts():
         return probability
         
        
-    def get_best_adaptation(self, root):
+    def get_best_adaptation(self, root):  # 根据访问次数来选
         best_num_visits = 0
         best_results = {}
         for adaptation,child in root.children.items():
@@ -205,4 +206,4 @@ class mcts():
         
         best_adaptation, best_child = random.choice(list(best_results.items())) 
               
-        return best_adaptation, best_child
+        return best_adaptation, best_child  # 返回最佳调整和对应的子节点
