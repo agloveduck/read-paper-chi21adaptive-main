@@ -11,7 +11,7 @@ from useroracle import UserOracle
 from copy import deepcopy
 from adaptation import Adaptation
 from state import AdaptationType
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'value_network'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'value_network'))  # 将模型文件的路径添加到Python解释器的搜索路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'policy_network'))
 from value_network_model import ValueNetwork
 
@@ -32,37 +32,37 @@ def random_policy(state, oracle):
     return rewards
 
 # MCTS node
-class TreeNode():
+class TreeNode():  # 存储有关该节点的菜单状态、父节点、该节点的访问次数、访问获得的总奖励以及子节点的信息
     def __init__(self, state, parent):
-        self.state = state # Menu now
-        self.parent = parent
-        self.num_visits = 0 # For tracking n in UCT
-        self.total_rewards = [0.0,0.0,0.0] # For tracking q in UCT
-        self.children = {}
-        self.fully_expanded = False # Is it expanded already?
+        self.state = state  # Menu now 节点菜单的当前状态
+        self.parent = parent  # 当前节点的父节点
+        self.num_visits = 0  # For tracking n in UCT 该节点被访问的次数
+        self.total_rewards = [0.0,0.0,0.0]  # For tracking q in UCT 三种模型对应的奖励列表
+        self.children = {}  # 映射到子节点的字典  key:adaption 一个调整 value:子节点
+        self.fully_expanded = False  # Is it expanded already? 是否已扩展
 
     def __str__(self):
-        return str(self.state) + "," + str(self.total_rewards)
+        return str(self.state) + "," + str(self.total_rewards)  # 打印当前状态和总奖励
 
 # MCTS tree
 class mcts():
     def __init__(self, useroracle, weights, objective, use_network, network_name = None, limit_type = 'time', time_limit=None, num_iterations=None, exploration_const=1.0/math.sqrt(2),
                  rollout_policy=random_policy):
         
-        self.oracle = useroracle # User oracle used
-        self.objective = objective # Average, Conservative, or optimistic objective - used to compute total reward
-        self.weights = weights  # Weights for combining the 3 strategies when using the "average" objective
-        self.time_limit = time_limit # Time limit to search
-        self.limit_type = limit_type # Type of computation budget
-        self.num_iterations = num_iterations # No. of iterations to run
-        self.exploration_const = exploration_const # Original exploration constant: 1 / math.sqrt(2)
-        self.rollout = rollout_policy # Rollout policy used
-        self.use_network = use_network
+        self.oracle = useroracle  # User oracle used 用户策略模型
+        self.objective = objective # Average, Conservative, or optimistic objective - used to compute total reward 三种计算总奖励的方法
+        self.weights = weights  # Weights for combining the 3 strategies when using the "average" objective 使用平均方法时的各搜索加权权重
+        self.time_limit = time_limit  # Time limit to search 搜索过程的时间限制
+        self.limit_type = limit_type  # Type of computation budget 计算预算的类型，可以是“时间”或“迭代”
+        self.num_iterations = num_iterations  # No. of iterations to run 运行搜索的最大迭代次数
+        self.exploration_const = exploration_const  # Original exploration constant: 1 / math.sqrt(2) ：UCT（树的置信上限）公式中使用的探索常数
+        self.rollout = rollout_policy  # Rollout policy used
+        self.use_network = use_network  # 是否使用价值网络进行奖励估计
         if self.use_network and network_name:
             self.vn = ValueNetwork("networks/"+network_name)
 
         
-    def __str__(self):
+    def __str__(self):   # 返回mcts树结构的字符串表示形式。它从根节点开始，递归遍历其所有子节点，将它们的字符串表示形式添加到输出中
         tree_str = str(self.root) + "\n"
         for child in self.root.children.values():
             tree_str += str(child) + "\n"
@@ -116,30 +116,31 @@ class mcts():
         return rewards
 
         
-    def select_node(self, node):
-        while not self.oracle.is_terminal(node.state):
-            if node.fully_expanded:
+    def select_node(self, node):  # 根据UCT算法选择树中的节点 选择未被探索的
+        # 子节点
+        while not self.oracle.is_terminal(node.state):  # 判断是否到达最大深度
+            if node.fully_expanded:  # 如果一个节点完全展开，意味着它的所有子节点都已被探索，它会选择UCT分数最高的子节点接着探索
                 node = self.get_best_child(node, self.exploration_const)
-            else:
-                return self.expand(node)
+            else:  # 该节点未完全扩展
+                return self.expand(node)  # 扩展这个节点
         return node
 
-    def expand(self, node):
-        adaptations = node.state.menu_state.possible_adaptations()
-        #Always try the "do nothing path first"
-        if adaptations[-1] not in node.children.keys():
+    def expand(self, node):  # 扩展节点
+        adaptations = node.state.menu_state.possible_adaptations()  #获取可能的调整列表  返回的列表元素格式为Adaptation([i, j, type, expose])
+        #Always try the "do nothing path first" 首先考虑什么都不做 ？ 为什么 可不可以调整
+        if adaptations[-1] not in node.children.keys():  # 扩展节点子节点的调整列表没有“什么都不做”这个调整 创建一个什么都不做的子节点
             adaptation = adaptations[-1]
-            newNode = TreeNode(node.state.take_adaptation(adaptation), node)
-            node.children[adaptation] = newNode
-            return newNode
+            newNode = TreeNode(node.state.take_adaptation(adaptation), node)  #通过对菜单进行“do nothing”的调整创建一个新的节点（新state 本node作为父节点）
+            node.children[adaptation] = newNode  #该节点的子节点字典 {[0,0,AdaptationType.NONE,True]：newNode}
+            return newNode  # 返回一个新节点
 
-        random.shuffle(adaptations)
+        random.shuffle(adaptations)  # 打乱调整列表有利于探索不同路径并提高 MCTS 算法的有效性
         for  adaptation in adaptations:
             if adaptation not in node.children.keys():
-                newNode = TreeNode(node.state.take_adaptation(adaptation), node)
-                node.children[adaptation] = newNode
+                newNode = TreeNode(node.state.take_adaptation(adaptation), node)  # 通过对菜单进行一个adaptation，创建一个新节点
+                node.children[adaptation] = newNode  # 该节点的子节点字典 {[adaptation]：newNode}
                 if len(adaptations) == len(node.children) or self.oracle.is_terminal(newNode.state):
-                    node.fully_expanded = True
+                    node.fully_expanded = True  # 该节点是否被探索完的条件：1.已经利用所有可能的adaption来创建子节点 / 2.新节点到达最大限制深度
                 return newNode
         raise Exception("Ouch! Should never reach here")
 
@@ -150,11 +151,11 @@ class mcts():
             node = node.parent
 
     # Pick best child as next state
-    def get_best_child(self, node, exploration_const):
+    def get_best_child(self, node, exploration_const):  # 从给定的父节点中选择最佳子节点
         best_value = float("-inf")
         best_node = None
         # return argmax(customFunction(node, frequencies, associations))
-        children = list(node.children.values())
+        children = list(node.children.values())  # 子节点列表
         random.shuffle(children)
         for child in children:
             # node value using UCT

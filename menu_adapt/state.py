@@ -32,20 +32,20 @@ class State():
         self.exposed = exposed
 
     # Function called when an adaptation is made. The user state and menu state are updated accordingly
-    def take_adaptation(self, adaptation, update_user = True):        # 做调整
-        new_state = deepcopy(self)
+    def take_adaptation(self, adaptation, update_user = True):        # 做一个调整 产生新的state
+        new_state = deepcopy(self)  # 深拷贝原来的状态
         new_state.depth += 1  # 深度+1
-        new_state.exposed = adaptation.expose
-        if self.exposed: new_state.previous_seen_state = self
+        new_state.exposed = adaptation.expose  # 是否把调整暴露给用户
+        if self.exposed: new_state.previous_seen_state = self  # 暴露给用户 则新状态的上一个状态设置为当前状态
 
-        # Simulate the next user session by adding clicks
+        # Simulate the next user session by adding clicks 更新用户状态
         if self.exposed and update_user:
             new_state.user_state.update(menu = self.menu_state.menu, number_of_clicks = self.number_of_clicks)
-        # Adapt the menu
+        # Adapt the menu 更新菜单状态
 
         new_state.menu_state.menu = self.menu_state.adapt_menu(adaptation)
         
-        return new_state
+        return new_state  # 返回新状态
 
 
 # Defines the menu - includes the list of menu items, and association list for each item. 
