@@ -40,7 +40,7 @@ def get_click_distribution(menu, history, normalize = True):  # 获取点击分�
     return frequency, total_clicks, indexed_history  # 返回 item点击频率 总点击数 点击历史记录
 
 # returns frequency distribution given a menu and history
-def get_frequencies(menu, history, normalize = True):  # 获取菜单item的字典
+def get_frequencies(menu, history, normalize = True):  # 获取菜单item的点击频率字典 以及总点击数
     frequency = {}
     total_clicks = len(history)
     menu_items = list(filter(("----").__ne__, menu))

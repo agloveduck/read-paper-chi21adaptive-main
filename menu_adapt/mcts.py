@@ -76,25 +76,25 @@ class mcts():
             rewards = self.rollout(node.state, self.oracle)  # 使用HCI预测模型计算累计奖励
         self.backpropagate(node, rewards)  # 反向传播更新访问次数和奖励
 
-    def search(self, initial_state, initial_node = None):
-        if initial_node: 
+    def search(self, initial_state, initial_node = None):  # 执行 MCTS 算法的搜索过程，以找到最佳的菜单适应方案
+        if initial_node:  # 设置初始节点
             self.root = initial_node
             self.root.parent = None
         else: self.root = TreeNode(initial_state, None)
-        time_limit = time.time() + self.time_limit / 1000
+        time_limit = time.time() + self.time_limit / 1000  # 设置初始时间
         if self.limit_type == 'time':
             while time.time() < time_limit:
-                self.execute_round()            
+                self.execute_round()            # 没超过时间限制  # 执行一轮MCTS
         elif self.limit_type == 'iterations':
             for _ in self.num_iterations:
                 self.execute_round()
 
-        adaptation_probability = self.get_adaptation_probabilities(self.root, 0.0)
-        best_child = self.get_best_child(self.root, 0.0)
-        best_adaptation = self.get_adaptation(self.root, best_child)
-        avg_rewards = [x/best_child.num_visits for x in best_child.total_rewards]
+        adaptation_probability = self.get_adaptation_probabilities(self.root, 0.0)  # 计算该节点的adaptation概率字典
+        best_child = self.get_best_child(self.root, 0.0)  # 选择最优子节点 c=0 退化到贪心算法
+        best_adaptation = self.get_adaptation(self.root, best_child)  # 根据最优子节点 获得最优adaptation
+        avg_rewards = [x/best_child.num_visits for x in best_child.total_rewards]  # 三种搜索策略平均奖励列表
         
-        return best_adaptation, best_child, avg_rewards, adaptation_probability
+        return best_adaptation, best_child, avg_rewards, adaptation_probability  # 返回最优adaptation 最优子节点 平均奖励列表 该节点的adaptation概率字典
 
 
     def get_reward_predictions(self, node):  # 使用价值网络来计算累计奖励
@@ -187,10 +187,11 @@ class mcts():
     def get_adaptation_probabilities(self, node, exploration_const):  # 根据子节点的访问计数计算从给定节点选择每种可能的适应的概率
         if node.children == 0: return None
         # Transition probability for children. Dict. Key = adaptation; Value = probability
+        # 初始化 在某一节点选择某一Adaptation([i, j, type, expose])的概率 初始都为0
         probability = {a:0.0 for a in node.state.menu_state.possible_adaptations()}
         for adaptation,child in node.children.items():
-            probability[adaptation] = child.num_visits/node.num_visits
-        return probability
+            probability[adaptation] = child.num_visits/node.num_visits  # 概率 由选择这一adaption所到达的子节点的访问次数/该节点总访问次数 决定
+        return probability  # {Adaptation([i, j, type, expose]):概率值}
         
        
     def get_best_adaptation(self, root):  # 根据访问次数来选
