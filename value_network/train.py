@@ -14,12 +14,12 @@ conf.gpu_options.allow_growth = True
 tf.compat.v1.Session(config=conf)
 
 # Maximum number of items in a given menu, including separators.
-MAX_MENU_ITEMS = 20
+MAX_MENU_ITEMS = 20  # 菜单中的最大项数，包括分隔符
 # Size of the one-hot encoded vectors. This value should be large enough to avoid hashing collisions.
-ENC_VOCAB_SIZE = 90
+ENC_VOCAB_SIZE = 90  # one-hot 编码字典大小
 
 
-def load_data(filepath):
+def load_data(filepath):  # 从文件中加载训练数据 返回价值网络的 输入 输出
     X1, X2, X3, X4 = [], [], [], []
     y1, y2, y3 = [], [], []
 
@@ -39,7 +39,7 @@ def load_data(filepath):
     return (np.array(X1), np.array(X2), np.array(X3), np.array(X4)), (np.array(y1), np.array(y2), np.array(y3))
 
 
-def format_row(line):
+def format_row(line):  # 将 pump.py 产生的result.txt 文件 按行解析返回价值网络的输入
     (serial, forage, recall), (source_menu, source_freq, source_asso), (target_menu, target_freq, target_asso), exposed = parse_row(line)
 
     adap_menu, diff_freq, diff_asso = parse_user_input(source_menu, source_freq, source_asso, target_menu, target_freq, target_asso)
@@ -47,11 +47,11 @@ def format_row(line):
     return (serial, forage, recall), (adap_menu, diff_freq, diff_asso), exposed
 
 
-def parse_row(line):
+def parse_row(line):  #
     # Row format is "[serial,forage,recall][source_menu][source_freq][source_asso][target_menu][target_freq][target_asso][exposed]"
     tokens = line[1:-1].split('][')
     n_toks = len(tokens)
-    assert n_toks == 8, 'There are {} tokens, but I expected 8'.format(n_toks)
+    assert n_toks == 8, 'There are {} tokens, but I expected 8'.format(n_toks)  #根据预期的格式，应该有 8 个字段。如果实际的字段数不是 8，则会引发断言错误
 
     # FIXME: We should agree on a parser-friendly row format.
     serial, forage, recall = list(map(float, tokens[0].split(', ')))
@@ -70,11 +70,11 @@ def parse_row(line):
     return (serial, forage, recall), (source_menu, source_freq, source_asso), (target_menu, target_freq, target_asso), exposed
 
 
-def parse_user_input(source_menu, source_freq, source_asso, target_menu, target_freq, target_asso):
+def parse_user_input(source_menu, source_freq, source_asso, target_menu, target_freq, target_asso):  # 返回 adap_menu, adj(diff_freq), diff_asso
     # Encode adapted menu as integers and compute the difference between previous and current menu configuration.
-    adap_menu = onehot_menu(target_menu)
+    adap_menu = onehot_menu(target_menu)  # onehot编码的adap_menu
     # Adjust remaining menu items with zeros (reserved value) at the end.
-    adap_menu = adj(adap_menu, value=[0])
+    adap_menu = adj(adap_menu, value=[0])  # 整形，补0
 
 #    # Experimental: ignore differences w.r.t source menu.
 #    num_cols = len(target_freq)
@@ -91,7 +91,7 @@ def parse_user_input(source_menu, source_freq, source_asso, target_menu, target_
     source_asso = pad(source_asso, max_asso_len)
     target_asso = pad(target_asso, max_asso_len)
 
-    diff_freq = np.diff([source_freq, target_freq], axis=0).flatten()
+    diff_freq = np.diff([source_freq, target_freq], axis=0).flatten()  # 展平成1维
     diff_asso = np.diff([source_asso, target_asso], axis=0).flatten()
 
     # Ensure there is a change in freq distribution, otherwise `diff_freq` would be always zero.
@@ -100,32 +100,32 @@ def parse_user_input(source_menu, source_freq, source_asso, target_menu, target_
 
     # The association matrix list is given as a flat vector, so reshape it before padding.
     # Notice that we read the number of items BEFORE padding `diff_freq`.
-    num_rows = len(diff_freq)
+    num_rows = len(diff_freq)  # num_rows 的值等于源菜单频率向量和目标菜单频率向量中较长的那个向量
     num_cols = len(diff_asso)//num_rows
-    diff_asso = diff_asso.reshape((num_cols, num_rows))
+    diff_asso = diff_asso.reshape((num_cols, num_rows))  # 整形
     diff_asso = adj([adj(item) for item in diff_asso], [0]*MAX_MENU_ITEMS)
     diff_asso = diff_asso.reshape((MAX_MENU_ITEMS*MAX_MENU_ITEMS,))
 
     return adap_menu, adj(diff_freq), diff_asso
 
 
-def pad(l, size, value=0):
-    return l + [value] * abs((len(l)-size))
+def pad(l, size, value=0):  # 向量补0
+    return l + [value] * abs((len(l)-size))  #  计算向量长度
 
 
-def adj(vec, value=0):
+def adj(vec, value=0):  # 调整向量大小 使其具有固定的长度 MAX_MENU_ITEMS
     N = len(vec)
     d = MAX_MENU_ITEMS - N
     if d < 0:
         # Truncate vector.
-        vec = vec[:MAX_MENU_ITEMS]
+        vec = vec[:MAX_MENU_ITEMS]  # 向量长度超过目标长度，将向量进行截断，只保留前 MAX_MENU_ITEMS 个元素
     elif d > 0:
         # Pad vector with zeros (reserved value) at the *end* of the vector.
-        vec = list(vec) + [value for _ in range(d)]
+        vec = list(vec) + [value for _ in range(d)]  #  向量长度不足目标长度，将向量末尾填充 d 个 0
     return np.array(vec)
 
 
-def onehot_menu(items):
+def onehot_menu(items):  # 将菜单进行 one-hot 编码
     # FIXME: We should agree on a single-word menu separator, because '----' is conflicting with the built-in text parser.
     enc_menu = [tf.keras.preprocessing.text.one_hot(w, ENC_VOCAB_SIZE, filters='') for w in items]
     return enc_menu
@@ -136,7 +136,7 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
     # For example, the network capacity is bounded by the (max) number of menu items.
     num_items = diff_freq.shape[0]
 
-    def menu_head(inputs):
+    def menu_head(inputs):  # 输入 Adapted menu 输出 在文中图6 concatenator层的输入
         m = tf.keras.layers.Embedding(ENC_VOCAB_SIZE, num_items, input_length=num_items)(inputs)
         m = tf.keras.layers.Flatten()(m)
         m = tf.keras.layers.Dropout(0.5)(m)
@@ -144,7 +144,7 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
         m = tf.keras.Model(inputs=inputs, outputs=m)
         return m
 
-    def freq_head(inputs):
+    def freq_head(inputs):  # 输入点击频率差分矩阵 输出 在文中图6 concatenator层的输入
         f = tf.keras.layers.Reshape((num_items, 1))(inputs)
         f = tf.keras.layers.LSTM(num_items, activation='relu')(f)
         f = tf.keras.layers.Dropout(0.5)(f)
@@ -152,7 +152,7 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
         f = tf.keras.Model(inputs=inputs, outputs=f)
         return f
 
-    def asso_head(inputs):
+    def asso_head(inputs):  # 输入菜单关联性差分矩阵 输出 在文中图6 concatenator层的输入
         a = tf.keras.layers.Reshape((num_items, num_items))(inputs)
         a = tf.keras.layers.LSTM(num_items*2, activation='relu')(a)
         a = tf.keras.layers.Dropout(0.5)(a)
@@ -160,7 +160,7 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
         a = tf.keras.Model(inputs=inputs, outputs=a)
         return a
 
-    def serial_tail(inputs):
+    def serial_tail(inputs):  # 输入 文中图6 concatenator层的输出部分 后续网络
         s = tf.keras.layers.Dense(num_items//2)(inputs)
         s = tf.keras.layers.Dropout(0.5)(s)
         s = tf.keras.layers.Dense(1)(s)
@@ -184,7 +184,7 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
     input_menu = tf.keras.layers.Input(shape=adap_menu.shape, name='menu')
     input_freq = tf.keras.layers.Input(shape=diff_freq.shape, name='priors')
     input_asso = tf.keras.layers.Input(shape=diff_asso.shape, name='associations')
-    input_feat = tf.keras.layers.Input(shape=xtra_feat.shape, name='features')
+    input_feat = tf.keras.layers.Input(shape=xtra_feat.shape, name='features')  # 暴不暴露给用户
 
     menu = menu_head(input_menu)
     freq = freq_head(input_freq)
@@ -206,10 +206,10 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
 
 if __name__ == '__main__':
     # Input can be either a list of files or a directory.
-    train_inputs = sys.argv[1:]
+    train_inputs = sys.argv[1:]  # 确定了训练数据的输入路径
 
     # Collect all training files first.
-    tr_files = []
+    tr_files = []  # 收集所有训练文件的路径到 tr_files 列表中
     for tr_input in train_inputs:
         if os.path.isdir(tr_input):
             for path, directories, files in os.walk(tr_input):
@@ -244,11 +244,12 @@ if __name__ == '__main__':
 
     from time import time
     now = int(time())
-
+    #  模型训练中使用的回调函数
+    # 训练过程中的日志信息写入到 TensorBoard 日志目录中 在一定的轮数内指标没有改善，则提前终止训练 恢复到在验证集上表现最好的模型参数
     cbs = [
         tf.keras.callbacks.TensorBoard(log_dir='./training_logs_{}'.format(now)),
         tf.keras.callbacks.EarlyStopping(patience=20, restore_best_weights=True),
     ]
-
+    #  训练数据的 20% 作为验证集
     model.fit([X1, X2, X3, X4], [y1, y2, y3], validation_split=0.2, epochs=200, batch_size=32, callbacks=cbs)
     model.save('value_network.h5')
