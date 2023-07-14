@@ -7,7 +7,7 @@ import random
 from train import parse_row
 from model import ValueNetwork
 
-
+#  读取命令行参数并准备进行模型预测的测试数据
 model_file = sys.argv[1] # e.g. value_network_5items.h5
 vn = ValueNetwork(model_file)
 

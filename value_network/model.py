@@ -3,24 +3,24 @@
 
 '''Value network model for MCTS'''
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 不输出任何日志信息
 import warnings
 import numpy as np
 import tensorflow as tf
 from time import time
 from train import parse_user_input
-
+#  设置随机种子可复现
 np.random.seed(42)
 tf.random.set_seed(42)
 
 class ValueNetwork:
 
     def __init__(self, modelfile):
-        self.model = tf.keras.models.load_model(modelfile)
-        tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+        self.model = tf.keras.models.load_model(modelfile)  # 加载由modelfile指定路径的模型文件
+        tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)  # 将日志级别设置为ERROR
         
 
-    def predict_batch(self, data):
+    def predict_batch(self, data):  # 批量预测给定菜单数据的得分和成本
         '''
         Predict scores and costs for the given menu data.
         See `predict()` method.
@@ -47,7 +47,7 @@ class ValueNetwork:
 #        print('Predicting ...', file=sys.stderr)
 #        t_ini = time()
 
-        (serial, forage, recall) = self.model.predict([X1, X2, X3, X4])
+        (serial, forage, recall) = self.model.predict([X1, X2, X3, X4])  # 使用模型的predict方法对输入数据进行预测，得到预测的三种搜索模型分数
 
 #        t_end = time()
 #        print('Elapsed: {} s'.format(t_end - t_ini), file=sys.stderr))
