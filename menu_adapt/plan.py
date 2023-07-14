@@ -94,10 +94,10 @@ elif strategy == UserStrategy.RECALL:
 menu_state = MenuState(currentmenu, associations)  # 菜单状态由当前菜单列表以及菜单item关联列表构成
 user_state = UserState(freqdist, total_clicks, history)  # 用户状态由 freqdist：用户点击菜单item频率列表 total_clicks: 用户点击menu里item的总数 history:点击历史记录列表 元素为[item名字,在menu里的下标]
 
-root_state = State(menu_state,user_state, exposed=True) # 初始化状态根节点
+root_state = State(menu_state,user_state, exposed=True)  # 初始化状态根节点
 my_oracle = UserOracle(maxdepth, associations=menu_state.associations)  #用户运行模型 由最大深度 菜单关联列表 决定
-completion_times = my_oracle.get_individual_rewards(root_state)[1] # Initial completion time for current menu 三种策略搜索时间列表
-avg_time = sum([a * b for a, b in zip(weights, completion_times)]) # 计算加权平均搜索时间（三种策略都考虑）
+completion_times = my_oracle.get_individual_rewards(root_state)[1]  # Initial completion time for current menu 三种策略搜索时间列表
+avg_time = sum([a * b for a, b in zip(weights, completion_times)])  # 计算加权平均搜索时间（三种策略都考虑）
 parallelised = False if args.nopp else True  # 是否并行
 
 
@@ -111,33 +111,33 @@ print(f"Associations: {associations}")
 
 # Execute the MCTS planner and return sequence of adaptations
 @ray.remote
-def step(state, oracle, weights, objective, use_network, network_name, timebudget): # 执行一步，并保存了步骤的结果
+def step(state, oracle, weights, objective, use_network, network_name, timebudget):  # 执行一步，并保存了步骤的结果
     results = []
-    original_times = oracle.get_individual_rewards(state)[1] #获取这一步 使用各策略搜索时间列表 [new_serial_time, new_forage_time, new_recall_time]
+    original_times = oracle.get_individual_rewards(state)[1]  # 获取这一步 使用各策略搜索时间列表 [new_serial_time, new_forage_time, new_recall_time]
     tree = mcts.mcts(oracle, weights, objective, use_network, network_name, time_limit=timebudget)
     node = None
-    while not oracle.is_terminal(state):
+    while not oracle.is_terminal(state):  # 没到结束条件 获取在此节点可选择的最佳adaptation 对应子节点 以及奖励（基于三种模型）
         _, best_child, _, _ = tree.search(state, node) # search returns selected (best) adaptation, child state, avg rewards
         node = best_child
         state = best_child.state
-        [rewards, times] = oracle.get_individual_rewards(state)
-        if objective == "AVERAGE":
-            avg_reward = sum([a*b for a,b in zip(weights, rewards)]) # Take average reward 
+        [rewards, times] = oracle.get_individual_rewards(state)  # 选择这个子节点 各搜索策略的奖励列表 以及时间列表
+        if objective == "AVERAGE":  # 三种搜索策略加权平均
+            avg_reward = sum([a*b for a,b in zip(weights, rewards)])  # Take average reward
             avg_time = sum([a * b for a, b in zip(weights, times)])
             avg_original_time = sum([a*b for a,b in zip(weights,original_times)]) # average selection time for the original design
-        elif objective == "OPTIMISTIC":
-            avg_reward = max(rewards) # Take best reward
+        elif objective == "OPTIMISTIC":  # 奖励选择三种搜索策略奖励最大的 搜索时间选择最小的
+            avg_reward = max(rewards)  # Take best reward
             avg_time = min(times)
             avg_original_time = min(original_times)
-        elif objective == "CONSERVATIVE":
-            avg_reward = min(rewards) # Take minimum; add penalty if negative
+        elif objective == "CONSERVATIVE":  # 奖励选择三种搜索策略奖励最小的 搜索时间选择最大的
+            avg_reward = min(rewards)  # Take minimum; add penalty if negative
             avg_time = max(times)
             avg_original_time = max(original_times)
             
         #avg_reward = sum([a * b for a, b in zip(weights, rewards)])
         #avg_time = sum([a * b for a, b in zip(weights, times)])
-        if avg_time > avg_original_time and state.exposed: 
-            exposed = False # Heuristic. There must be a time improvement to show the menu
+        if avg_time > avg_original_time and state.exposed:   # 如果没有时间缩短 并且现在暴露给用户标志为真 将标志设为假
+            exposed = False  # Heuristic. There must be a time improvement to show the menu
         else: exposed = state.exposed
         results.append([state.menu_state.simplified_menu(), state.depth, exposed, round(avg_original_time,2), round(avg_time,2), round(avg_reward,2)])
     return avg_reward, results
@@ -149,17 +149,17 @@ if not parallelised:
     print("\nPlanning completed.\n\n[[Menu], Step #, Is Exposed, Original Avg Time, Final Avg Time, Reward]")
     for step in bestmenu:
         print(step)
-        if step[2]: utility.save_menu(step[0], "output/adaptedmenu" + str(step[1]) + ".txt")
-elif parallelised: # Create and execute multiple instances
-    parallel_instances = args.pp # Number of parallel instances
-    state_copies = [deepcopy(root_state)] * parallel_instances # Create copies
+        if step[2]: utility.save_menu(step[0], "output/adaptedmenu" + str(step[1]) + ".txt")  # 每个深度保存一个菜单文件
+elif parallelised:  # Create and execute multiple instances 代码创建多个并行实例，并使用 Ray 框架来运行这些实例
+    parallel_instances = args.pp  # Number of parallel instances 并行处理进程数
+    state_copies = [deepcopy(root_state)] * parallel_instances  # Create copies
     result_ids = []
     for i in range(parallel_instances):
         statecopy = state_copies[i]
         result_ids.append(step.remote(statecopy, my_oracle, weights, objective, use_network, vn_name, timebudget))
-    
-    results = ray.get(result_ids) # Use ray to run instances
-    bestresult = float('-inf')
+    # 并行执行多个函数调用，并在需要时获取结果
+    results = ray.get(result_ids)  # Use ray to run instances
+    bestresult = float('-inf')  # 初始化最优结果和最优菜单
     bestmenu = menu_state.simplified_menu()
 
     # # Get best result from parallel threads
@@ -172,4 +172,4 @@ elif parallelised: # Create and execute multiple instances
     print("\nPlanning completed.\n\n[[Menu], Step #, Is Exposed, Original Avg Time, Final Avg Time, Reward]")
     for step in bestmenu:
         print(step)
-        if step[2]: utility.save_menu(step[0], "output/adaptedmenu" + str(step[1]) + ".txt")
+        if step[2]: utility.save_menu(step[0], "output/adaptedmenu" + str(step[1]) + ".txt")  # 每个深度保存一个菜单文件
