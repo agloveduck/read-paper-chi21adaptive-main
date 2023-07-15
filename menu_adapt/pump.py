@@ -17,7 +17,7 @@ parser.add_argument("--history", "-H", help="Click frequency file name", default
 parser.add_argument("--associations", "-a", help="Association list file name", default="associations_5items.txt")
 parser.add_argument("--inputdir", "-i", help="Input directory path", default="./input")
 parser.add_argument("--menuscount", "-mn", type=int, help="number of unique menus", default=50)
-parser.add_argument("--usercount", "-un", type = int, help = "number of user histories", default = 4)
+parser.add_argument("--usercount", "-un", type = int, help = "number of user histories", default=4)
 parser.add_argument("--adaptationcount", "-an", type=int, help="number of adaptations", default=50)
 parser.add_argument("--timebudget", "-t", type=int, help="time budget", default=12000)
 parser.add_argument("--maxdepth", "-d", type=int, help="maximum depth", default=8)

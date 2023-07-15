@@ -55,7 +55,7 @@ objective = args.objective.upper()
 pwd = os.chdir(os.path.dirname(__file__)) # 将当前工作目录更改为脚本所在文件的父目录 避免在代码中使用绝对路径
 
 # Set up the menu instance
-currentmenu = utility.load_menu("./input/" + args.menu) # load menu items from text file 调用utility.py 里面的函数来导入菜单列表
+currentmenu = utility.load_menu("./input/" + args.menu)  # load menu items from text file 调用utility.py 里面的函数来导入菜单列表
 # freqdist：item频率列表  total_clicks: 用户点击menu里item的总数 history:点击历史记录列表 元素为[item名字,在menu里的下标]
 freqdist, total_clicks, history = utility.load_click_distribution(currentmenu, "./input/" + args.history) # load from user history (CSV file)
 associations = utility.load_associations(currentmenu,"./input/" + args.associations) # load assocation matrix from text file
