@@ -138,8 +138,8 @@ class MenuState():  # 定义菜单状态
         return possibleadaptations  # 返回的列表元素格式为Adaptation([i, j, type, expose])
 
     # Function to modify the menu by making an adaptation.
-    def adapt_menu(self, adaptation):  # 根据adpat类型调整菜单
-        new_menu = self.menu.copy() # 新菜单为当前菜单的副本
+    def adapt_menu(self, adaptation):  # 根据 adpat 类型调整菜单
+        new_menu = self.menu.copy()  # 新菜单为当前菜单的副本
         if adaptation.type == AdaptationType.SWAP:  # swap 交换 i j 位置
             new_menu[adaptation.i], new_menu[adaptation.j] = new_menu[adaptation.j], new_menu[adaptation.i]
         elif adaptation.type == AdaptationType.MOVE:  # 移动 new_menu 中索引为 adaptation.i 的菜单项删除，并将其插入到索引为 adaptation.j 的位置
@@ -150,9 +150,9 @@ class MenuState():  # 定义菜单状态
             groups = menu_string.split(self.separator)
             groups = list(filter((";").__ne__, groups))
             groups = list(filter(("").__ne__, groups))
-            if adaptation.type == AdaptationType.GROUP_SWAP: # 交换第i,j两组
+            if adaptation.type == AdaptationType.GROUP_SWAP:  # 交换第i,j两组
                 groups[adaptation.i],groups[adaptation.j] = groups[adaptation.j], groups[adaptation.i]
-            elif adaptation.type == AdaptationType.GROUP_MOVE: # 移动第i组到 位置j
+            elif adaptation.type == AdaptationType.GROUP_MOVE:  # 移动第i组到 位置j
                 original_groups = groups.copy()
                 del groups[adaptation.i]
                 groups.insert(adaptation.j, original_groups[adaptation.i])

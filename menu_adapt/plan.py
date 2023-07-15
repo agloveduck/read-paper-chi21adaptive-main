@@ -48,7 +48,7 @@ else:
     vn_name: None
     use_network = False
 
-#Objective function to be used; default is average
+#Objective function to be used; default is average 目标函数默认选择average
 objective = args.objective.upper()
 
 # Change PWD to main directory
