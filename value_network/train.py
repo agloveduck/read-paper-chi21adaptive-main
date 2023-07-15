@@ -234,10 +234,11 @@ if __name__ == '__main__':
         y2 = np.concatenate((y2, y2_)) if len(y2) > 0 else y2_
         y3 = np.concatenate((y3, y3_)) if len(y3) > 0 else y3_
 
-    # Provide one sample of the input data to the model.
+    # Provide one sample of the input data to the model.+
+    3
     model = create_model(X1[0], X2[0], X3[0], X4[0])
 
-#    model.summary()
+#    model.summary()  绘制模型结构图
 #    tf.keras.utils.plot_model(model, show_shapes=False, to_file='value_network.png')
 #    tf.keras.utils.plot_model(model, show_shapes=True, to_file='value_network_with_shapes.png')
 #    tf.keras.utils.plot_model(model, show_shapes=False, show_layer_names=False, to_file='value_network_blocks.png')
@@ -245,7 +246,7 @@ if __name__ == '__main__':
     from time import time
     now = int(time())
     #  模型训练中使用的回调函数
-    # 训练过程中的日志信息写入到 TensorBoard 日志目录中 在一定的轮数内指标没有改善，则提前终止训练 恢复到在验证集上表现最好的模型参数
+    # 训练过程中的日志信息写入到 TensorBoard 日志目录中 在20.轮数内指标没有改善，则提前终止训练 恢复到在验证集上表现最好的模型参数
     cbs = [
         tf.keras.callbacks.TensorBoard(log_dir='./training_logs_{}'.format(now)),
         tf.keras.callbacks.EarlyStopping(patience=20, restore_best_weights=True),
