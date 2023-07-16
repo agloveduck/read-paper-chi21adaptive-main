@@ -1,3 +1,5 @@
+<img width="988" alt="image" src="https://github.com/agloveduck/read-paper-chi21adaptive-main/assets/60003839/1ce5ea6a-1c85-46d1-bdbf-49df9088733c">
+
 ## 在MCTS的 ROLL-OUT 阶段 奖励估计 使用HCI预测模型（数据量比较小的情况 具体在菜单这个例子可能就是20item以内的情况）OR 神经网络（数据量较大情况）
 ### utility.py 从文件里读取数据加工成模型需要的数据
 * load_menu (filename)导入 menu 返回item列表
