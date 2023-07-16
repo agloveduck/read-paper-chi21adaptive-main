@@ -43,3 +43,4 @@
   用5item数据初始化菜单状态 并对菜单进行随机打乱 使用zipfian分布模拟菜单使用情况 生成数据的每一行包括
 [serial,forage,recall][source_menu][source_frequencies][source_associations][target_menu][target_frequencies][target_associations][exposed]
 * 将数据喂给train.py 获得h5文件 即plan.py里使用的模型
+### 本文还没有使用policy network
