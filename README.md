@@ -4,12 +4,13 @@
 * load_click_distribution (menu, filename, normalize = True) 从history.csv文件里导入数据 
   返回 freqdist：item频率列表  total_clicks: 用户点击menu里item的总数 history:点击历史记录列表 元素为[item名字,在menu里的下标]
 * load_associations (menu, filename): 关联字典 key是item名字 value是与之关联的item列表,如果没有与之关联的 列表里就是item自身
+* compute_associations(menu, ft=None): 词向量计算菜单项之间的关联度 
 ### state.py 定义了MCTS中每一个节点状态 state由 menustate userstate 两部分构成
 * menustate 由 menu, associations决定 
 * possible_adaptations(self)返回此菜单状态下可能的调整的列表 考虑的adapt包括 swaps / moves / Swap groups / Move groups / do nothing
   列表元素： Adaptation([i, j, type, expose])
 * adapt_menu(self, adaptation) 根据Adaptation([i, j, type, expose])调整菜单
-* userstate 由 freqdist, total_clicks, history决定
+* userstate 由 用户专业知识(activations)用户兴趣(用户点击频率freqdist)freqdist, total_clicks, history决定
 * get_activations(self)计算每个菜单项的激活值 根据用户的点击历史和时间间隔计算得出的 返回一个嵌套字典
 * update(self, menu, number_of_clicks = None)更新用户状态的方法
 ### adaption.py 定义一个adaption  i j 是菜单中两个位置，type指定adapt的类型(swap,move,group move...) expose 是一个布尔值，指定是否向用户公开adpation
@@ -43,4 +44,7 @@
   用5item数据初始化菜单状态 并对菜单进行随机打乱 使用zipfian分布模拟菜单使用情况 生成数据的每一行包括
 [serial,forage,recall][source_menu][source_frequencies][source_associations][target_menu][target_frequencies][target_associations][exposed]
 * 将数据喂给train.py 获得h5文件 即plan.py里使用的模型
-### 本文还没有使用policy network
+### Future work
+* 本文还没有使用policy network
+* 本文菜单实例中adaptions还没有考虑highlighting split menus... 可以考虑这方面
+* input 考虑 grid icons情况 目前是textual labels

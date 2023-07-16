@@ -207,7 +207,7 @@ class UserState():  # 定义用户状态类
 
 
     # For each item, returns a dictionary of activations.
-    def get_activations(self): # 激活值是根据用户的点击历史和时间间隔计算得出的
+    def get_activations(self): # 激活值是根据用户的点击历史和时间间隔计算得出的 公式5.1.4
         activations = {} # Activation per target per location 存储每个菜单项在每个位置的激活值
         duration_between_clicks = 20.0 # Wait time between two clicks 两次点击之间的等待时间
         session_interval = 50.0 # Wait time between 2 sessions 两个会话之间的等待时间
