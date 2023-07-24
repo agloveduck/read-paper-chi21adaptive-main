@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/menu_adapt" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/value_network" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (tensorflow)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

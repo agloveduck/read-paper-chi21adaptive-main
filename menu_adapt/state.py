@@ -55,8 +55,8 @@ class MenuState():  # 定义菜单状态
         self.menu = menu
         self.associations = associations
         separatorsalready = menu.count(self.separator) # How many separators we have?
-        # max_separators = int(min(math.ceil(len(self.menu)/1.5), 8))
-        max_separators = 4  # 根据菜单的长度动态确定最大分隔符数量
+        max_separators = int(min(math.ceil(len(self.menu)/1.5), 8))
+        # max_separators = 4  # 根据菜单的长度动态确定最大分隔符数量
         if separatorsalready < max_separators:
             for _ in range (separatorsalready, max_separators): # Append the remaining of separators
                 self.menu.append(self.separator)
@@ -208,13 +208,13 @@ class UserState():  # 定义用户状态类
 
     # For each item, returns a dictionary of activations.
     def get_activations(self): # 激活值是根据用户的点击历史和时间间隔计算得出的 公式5.1.4
-        activations = {} # Activation per target per location 存储每个菜单项在每个位置的激活值
-        duration_between_clicks = 20.0 # Wait time between two clicks 两次点击之间的等待时间
-        session_interval = 50.0 # Wait time between 2 sessions 两个会话之间的等待时间
-        session_click_length = 20 # Clicks per session 每个会话中的点击次数
-        total_sessions = math.ceil(self.total_clicks/session_click_length) # Number of sessions so far 当前总共的会话数
+        activations = {}  # Activation per target per location 存储每个菜单项在每个位置的激活值
+        duration_between_clicks = 20.0  # Wait time between two clicks 两次点击之间的等待时间
+        session_interval = 50.0  # Wait time between 2 sessions 两个会话之间的等待时间
+        session_click_length = 20  # Clicks per session 每个会话中的点击次数
+        total_sessions = math.ceil(self.total_clicks/session_click_length)  # Number of sessions so far 当前总共的会话数
         for i in range(0, int(self.total_clicks)):
-            session = math.ceil((i+1)/session_click_length) # Session index
+            session = math.ceil((i+1)/session_click_length)  # Session index
             item = self.history[i][0]  # 当前点击的菜单项
             position = self.history[i][1]  # 当前点击的菜单项所处位置
             if item not in activations.keys(): activations[item] = {position:0} # Item has not been seen yet. Add to dictionary 初始化其对应位置的激活值为0

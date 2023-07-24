@@ -207,25 +207,36 @@ def create_model(adap_menu, diff_freq, diff_asso, xtra_feat):
 if __name__ == '__main__':
     # Input can be either a list of files or a directory.
     train_inputs = sys.argv[1:]  # 确定了训练数据的输入路径
+    #  sys.argv[1:] output/results_vn_214343.txt
+    # Collect all training files first.
+    tr_files = []  # 创建一个空列表用于收集所有训练文件的路径
+
+    # Input can be either a list of files or a directory.
+    train_inputs = sys.argv[1:]  # 确定了训练数据的输入路径
 
     # Collect all training files first.
-    tr_files = []  # 收集所有训练文件的路径到 tr_files 列表中
-    for tr_input in train_inputs:
-        if os.path.isdir(tr_input):
-            for path, directories, files in os.walk(tr_input):
+    tr_files = []  # 创建一个空列表用于收集所有训练文件的路径
+
+    for tr_input in train_inputs:  # 循环遍历输入的训练数据文件或目录
+        tr_input_absolute = os.path.abspath(tr_input)  # Convert the relative path to absolute path
+        if os.path.isdir(tr_input_absolute):  # 判断输入是否为目录
+            # If the input is a directory, recursively walk through the directory to find all files with the '.txt' extension.
+            for path, directories, files in os.walk(tr_input_absolute):
                 for f in files:
-                    if f.endswith('.txt'):
-                        file_path = os.path.join(path, f)
-                        tr_files.append(file_path)
+                    if f.endswith('.txt'):  # 判断文件是否以'.txt'结尾
+                        file_path = os.path.join(path, f)  # 获取文件的绝对路径
+                        tr_files.append(file_path)  # 将文件的绝对路径添加到 tr_files 列表中
 
-        elif os.path.isfile(tr_input):
-            tr_files.append(tr_input)
+        elif os.path.isfile(tr_input_absolute):  # 判断输入是否为文件
+            # If the input is a file, add its path directly to the tr_files list.
+            tr_files.append(tr_input_absolute)  # 将文件的绝对路径添加到 tr_files 列表中
 
+    print(tr_files)
     X1, X2, X3, X4 = [], [], [], []
     y1, y2, y3 = [], [], []
 
     for f in tr_files:
-        (X1_, X2_, X3_, X4_), (y1_, y2_, y3_) = load_data(file_path)
+        (X1_, X2_, X3_, X4_), (y1_, y2_, y3_) = load_data(f)
         X1 = np.concatenate((X1, X1_)) if len(X1) > 0 else X1_
         X2 = np.concatenate((X2, X2_)) if len(X2) > 0 else X2_
         X3 = np.concatenate((X3, X3_)) if len(X3) > 0 else X3_
@@ -236,6 +247,7 @@ if __name__ == '__main__':
 
     # Provide one sample of the input data to the model.+
     3
+
     model = create_model(X1[0], X2[0], X3[0], X4[0])
 
 #    model.summary()  绘制模型结构图

@@ -110,7 +110,7 @@ print(f"User Interest (normalised): {freqdist}")
 print(f"Associations: {associations}")
 
 # Execute the MCTS planner and return sequence of adaptations
-@ray.remote
+@ray.remote    # 定义ray remote函数
 def step(state, oracle, weights, objective, use_network, network_name, timebudget):  # 执行一步，并保存了步骤的结果
     results = []
     original_times = oracle.get_individual_rewards(state)[1]  # 获取这一步 使用各策略搜索时间列表 [new_serial_time, new_forage_time, new_recall_time]
@@ -123,7 +123,8 @@ def step(state, oracle, weights, objective, use_network, network_name, timebudge
         [rewards, times] = oracle.get_individual_rewards(state)  # 选择这个子节点 各搜索策略的奖励列表 以及时间列表
         if objective == "AVERAGE":  # 三种搜索策略加权平均
             avg_reward = sum([a*b for a,b in zip(weights, rewards)])  # Take average reward
-            avg_time = sum([a * b for a, b in zip(weights, times)])
+            avg_time = sum([a * b for a
+            , b in zip(weights, times)])
             avg_original_time = sum([a*b for a,b in zip(weights,original_times)]) # average selection time for the original design
         elif objective == "OPTIMISTIC":  # 奖励选择三种搜索策略奖励最大的 搜索时间选择最小的
             avg_reward = max(rewards)  # Take best reward
@@ -156,20 +157,22 @@ elif parallelised:  # Create and execute multiple instances 代码创建多个�
     result_ids = []
     for i in range(parallel_instances):
         statecopy = state_copies[i]
+        #  异步执行remote函数，返回结果id 并加入结果列表result_ids
         result_ids.append(step.remote(statecopy, my_oracle, weights, objective, use_network, vn_name, timebudget))
-    # 并行执行多个函数调用，并在需要时获取结果
+    # # 同步获取计算结果
     results = ray.get(result_ids)  # Use ray to run instances
     bestresult = float('-inf')  # 初始化最优结果和最优菜单
     bestmenu = menu_state.simplified_menu()
 
     # # Get best result from parallel threads
-    for result in results:
+    for result in results:  # 从多个进程选择result最好的作为结果
+
         if result[0] > bestresult:
-            bestresult = result[0] + 0.0
-            bestmenu = result[1]
+            bestresult = result[0] + 0.0  # avg_reward
+            bestmenu = result[1]  #[state.menu_state.simplified_menu(), state.depth, exposed, round(avg_original_time,2), round(avg_time,2), round(avg_reward,2)]
 
     # Get results and save output
     print("\nPlanning completed.\n\n[[Menu], Step #, Is Exposed, Original Avg Time, Final Avg Time, Reward]")
     for step in bestmenu:
         print(step)
-        if step[2]: utility.save_menu(step[0], "output/adaptedmenu" + str(step[1]) + ".txt")  # 每个深度保存一个菜单文件
+        if step[2]: utility.save_menu(step[0], "output/adaptedmenu" + str(step[1]) + ".txt")  # 每个exposed=true的深度保存一个菜单文件

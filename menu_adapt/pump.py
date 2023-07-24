@@ -13,7 +13,7 @@ import time
 # 使用argparse模块创建一个解析器
 parser = argparse.ArgumentParser()
 parser.add_argument("--menu", "-m", help="Input menu name", default="menu_5items.txt")
-parser.add_argument("--history", "-H", help="Click frequency file name", default="history3.csv")
+parser.add_argument("--history", "-H", help="Click frequency file name", default="history5.csv")
 parser.add_argument("--associations", "-a", help="Association list file name", default="associations_5items.txt")
 parser.add_argument("--inputdir", "-i", help="Input directory path", default="./input")
 parser.add_argument("--menuscount", "-mn", type=int, help="number of unique menus", default=50)

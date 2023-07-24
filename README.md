@@ -8,7 +8,7 @@
 * load_associations (menu, filename): 关联字典 key是item名字 value是与之关联的item列表,如果没有与之关联的 列表里就是item自身
 * compute_associations(menu, ft=None): 词向量计算菜单项之间的关联度 
 ### state.py 定义了MCTS中每一个节点状态 state由 menustate userstate 两部分构成
-* menustate 由 menu, associations决定 
+* menustate 由 menu, associations决定  分隔符数量由max_separators = int(min(math.ceil(len(self.menu)/1.5), 8))决定
 * possible_adaptations(self)返回此菜单状态下可能的调整的列表 考虑的adapt包括 swaps / moves / Swap groups / Move groups / do nothing
   列表元素： Adaptation([i, j, type, expose])
 * adapt_menu(self, adaptation) 根据Adaptation([i, j, type, expose])调整菜单
@@ -45,8 +45,25 @@
 * 首先使用pump.py 去生成一些训练数据 保存在output/results_vn_' + timestamp + '.txt'
   用5item数据初始化菜单状态 并对菜单进行随机打乱 使用zipfian分布模拟菜单使用情况 生成数据的每一行包括
 [serial,forage,recall][source_menu][source_frequencies][source_associations][target_menu][target_frequencies][target_associations][exposed]
-* 将数据喂给train.py 获得h5文件 即plan.py里使用的模型
-### Future work
+* 将数据喂给train.py 获得h5文件 即plan.py里使用的模型 【python train.py ..\menu_adapt\output\results_vn_214343.txt】
+### About ray
+* 分布式 多进程
+* 导入ray，并初始化执行环境
+  `import ray
+   ray.init()`
+* 定义ray remote函数
+  ` @ray.remote
+    def hello():
+      return "Hello world !"`
+* 异步执行remote函数，返回结果id
+   `object_id = hello.remote()`
+* 同步获取计算结果
+   `hello = ray.get(object_id)`
+* 输出计算结果
+    `print hello`
+* @ray.remote定义remote函数。使用此注解声明的函数都会自带一个默认的方法remote
+* 通过此方法发起的函数调用都是以提交分布式任务的方式异步执行的，函数的返回值是一个对象id，使用ray.get内置操作可以同步获取该id对应的对象
+* ### Future work
 * 本文还没有使用policy network
 * 本文菜单实例中adaptions还没有考虑highlighting split menus... 可以考虑这方面
 * input 考虑 grid icons情况 目前是textual labels
