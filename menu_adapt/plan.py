@@ -145,7 +145,7 @@ def step(state, oracle, weights, objective, use_network, network_name, timebudge
 
 # 修改存储地址以便区分
 restorepath="output/hcimodel/adaptedmenu"
-if vn_name :
+if use_network :
     restorepath="output/network/adaptedmenu"
 
 if not parallelised:
