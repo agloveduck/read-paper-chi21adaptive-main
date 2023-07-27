@@ -155,7 +155,7 @@ for i in range (0, number_of_unique_menus):
                     observation =str(rewards) + str(old_menu) + str(frequency_old_menu) + str(associations_old_menu) + \
                                 str(new_menu) + str(frequency_new_menu) + str(associations_new_menu) + str([int(exposed)])
                     training_data.add(observation)
-                    with open('output/results_vn_' + timestamp + '.txt', 'a') as filehandle:
+                    with open('output/pumpdata/results_vn_' + timestamp + '.txt', 'a') as filehandle:
                         filehandle.write('%s\n'% observation)  # 创建一个新文件并写入观察数据的字符串表示形式
             elif args.pumptype == "PN":  # 根据policy network 策略 来进行菜单调整
                 pn_results = policy_pump(my_state, my_oracle, time_budget)

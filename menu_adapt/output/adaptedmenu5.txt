@@ -1,9 +1,0 @@
-gloves
-shoes
-chair
-----
-tomato
-potato
-----
-----
-----

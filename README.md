@@ -42,7 +42,7 @@
   直到到达停止条件 返回avg_reward, results列表
 * 根据是否parallelised 具体操作有些区别 但都是调用step(root_state,my_oracle,weights, objective, use_network, vn_name, timebudget)函数 计算出results列表 并且每个深度保存一个文件
 ### 如果使用价值网络
-* 首先使用pump.py 去生成一些训练数据 保存在output/results_vn_' + timestamp + '.txt'
+* 首先使用pump.py 去生成一些训练数据 保存在output/pumpdata/results_vn_' + timestamp + '.txt'
   用5item数据初始化菜单状态 并对菜单进行随机打乱 使用zipfian分布模拟菜单使用情况 生成数据的每一行包括
 [serial,forage,recall][source_menu][source_frequencies][source_associations][target_menu][target_frequencies][target_associations][exposed]
 * 将数据喂给train.py 获得h5文件 即plan.py里使用的模型 【python train.py ..\menu_adapt\output\results_vn_214343.txt】
