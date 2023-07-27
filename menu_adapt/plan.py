@@ -143,6 +143,11 @@ def step(state, oracle, weights, objective, use_network, network_name, timebudge
         results.append([state.menu_state.simplified_menu(), state.depth, exposed, round(avg_original_time,2), round(avg_time,2), round(avg_reward,2)])
     return avg_reward, results
 
+# 修改存储地址以便区分
+restorepath="output/hcimodel/adaptedmenu"
+if vn_name :
+    restorepath="output/network/adaptedmenu"
+
 if not parallelised:
     result = step(root_state,my_oracle,weights, objective, use_network, vn_name, timebudget)
     bestmenu = result[1]
@@ -150,7 +155,7 @@ if not parallelised:
     print("\nPlanning completed.\n\n[[Menu], Step #, Is Exposed, Original Avg Time, Final Avg Time, Reward]")
     for step in bestmenu:
         print(step)
-        if step[2]: utility.save_menu(step[0], "output/hcimodel/adaptedmenu" + str(step[1]) + ".txt")  # 每个深度保存一个菜单文件
+        if step[2]: utility.save_menu(step[0], restorepath + str(step[1]) + ".txt")  # 每个深度保存一个菜单文件
 elif parallelised:  # Create and execute multiple instances 代码创建多个并行实例，并使用 Ray 框架来运行这些实例
     parallel_instances = args.pp  # Number of parallel instances 并行处理进程数
     state_copies = [deepcopy(root_state)] * parallel_instances  # Create copies
@@ -175,4 +180,4 @@ elif parallelised:  # Create and execute multiple instances 代码创建多个�
     print("\nPlanning completed.\n\n[[Menu], Step #, Is Exposed, Original Avg Time, Final Avg Time, Reward]")
     for step in bestmenu:
         print(step)
-        if step[2]: utility.save_menu(step[0], "output/network/adaptedmenu" + str(step[1]) + ".txt")  # 每个exposed=true的深度保存一个菜单文件
+        if step[2]: utility.save_menu(step[0],restorepath + str(step[1]) + ".txt")  # 每个exposed=true的深度保存一个菜单文件
